@@ -10,6 +10,7 @@ using System.IO;
 using Microsoft.Office.Core;
 using System.Security.Policy;
 using System.Drawing;
+using static System.Net.WebRequestMethods;
 
 namespace AutoPPT
 {
@@ -21,7 +22,7 @@ namespace AutoPPT
             Console.WriteLine("########################");
             Console.WriteLine("本软件功能为：\n将某个文件夹中所有的图片格式的文件(.jpg;.png;.bmp)合并为一个PPT文件，并储存在您的桌面路径下；");
             Console.WriteLine("##版本更新####################");
-            Console.WriteLine("V1.1版本更新：支持用户输入图片边距比例Margin(范围0-100)");
+            Console.WriteLine("V1.1版本更新：支持用户输入图片边距比例Margin(范围0-80)");
             Console.WriteLine("########################");
             Console.WriteLine("第一步：请您输入图片路径：");
             string targetDir = Console.ReadLine();
@@ -38,6 +39,7 @@ namespace AutoPPT
                 Console.WriteLine("您输入的页边距有误，请重新");
                 marginStr = Console.ReadLine();
             }
+            margin = Math.Max(0, Math.Min(80, margin));
             var app = new Application();
             app.Visible = MsoTriState.msoCTrue;
             var ppt = app.Presentations.Add();
@@ -49,6 +51,7 @@ namespace AutoPPT
 
             
             var figPathList = GetImagePaths(targetDir);
+            figPathList = SortPathByCreatedTime(figPathList);
             int currentSlide = 1;
 
             foreach (string figPath in figPathList)
@@ -96,7 +99,6 @@ namespace AutoPPT
 
             // 获取目标文件夹中所有文件的路径
             var fileNames = Directory.GetFiles(folderPath);
-
             // 遍历所有文件，查找图片文件路径
             foreach (var fileName in fileNames)
             {
@@ -110,6 +112,56 @@ namespace AutoPPT
             }
             // 返回所有图片文件路径
             return imagePaths;
+        }
+        /// <summary>
+        // TODO: 如何根据文件名进行排序？不要让11跟在1后面，而跟在10后面
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static List<string> SortPath(List<string> path)
+        {
+            var result = new List<string> { };
+
+            string lastPath = null;
+            foreach (var temp_path in path)
+            {
+                if (lastPath != null)
+                {
+                    int thisPathLength = temp_path.Length;
+                    for (int i = 0; i < Math.Min(lastPath.Length, thisPathLength); i++)
+                    {
+
+
+                        //if (lastPath[i] != temp_path[i])
+                        //{
+                        //    if (lastPath[i] > temp_path[i])
+                        //    {
+                        //        result.Add(temp_path);
+                        //        break;
+                        //    }
+                        //    else
+                        //    {
+                        //        result.Add(lastPath);
+                        //        break;
+                        //    }
+                        //}
+                    }
+                }
+                else
+                {
+                    lastPath = temp_path;
+                    result.Add(temp_path);
+                }
+            }
+
+
+            return result;
+        }
+
+        public static List<string> SortPathByCreatedTime(List<string> path)
+        {
+            var result = path.OrderByDescending(f => (new FileInfo(f)).LastWriteTime).ToList();
+            return result;
         }
     }
 }
